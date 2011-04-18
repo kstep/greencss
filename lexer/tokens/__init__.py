@@ -7,9 +7,10 @@ class Value(Token):
         return '%s%s' % (self.value, self.unit)
 
 class Selector(Token):
-    __slots__ = ('selector',)
+    def init(self, token):
+        self.selector = token
     def __str__(self):
-        return self.selector
+        return ', '.join(self.selector)
 
 class Property(Token):
     __slots__ = ('name', 'value')
