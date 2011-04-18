@@ -1,11 +1,28 @@
-class Token(object):
-    parser = None
 
-    def __init__(self, parser=None, token=[]):
-        self.__name__ = self.__class__.__name__
-        self.parser = parser
-        if token:
-            self.init(token)
+__all__ = ['Token', 'TokenError']
+
+class TokenError(StandardError):
+    pass
+
+class Token(object):
+
+    def __new__(cls, parser=None):
+        if parser:
+            def wrapper(inp):
+                token, rest = parser(inp)
+                if not token:
+                    return token, rest
+
+                self = cls()
+                try:
+                    self.init(token)
+                except TokenError:
+                    return None, inp
+
+                return [self], rest
+            return wrapper
+
+        return object.__new__(cls)
 
     def init(self, token):
         for i, k in enumerate(self.__slots__):
@@ -13,12 +30,6 @@ class Token(object):
                 setattr(self, k, token[i])
             except IndexError:
                 setattr(self, k, '')
-
-    def __call__(self, inp):
-        token, rest = self.parser(inp)
-        if token is not None:
-            token = [self.__class__(token=token)]
-        return token, rest
 
     def __str__(self):
         return ''.join(str(getattr(self, k, '')) for k in self.__slots__)
