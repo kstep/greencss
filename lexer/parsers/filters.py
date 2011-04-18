@@ -6,7 +6,9 @@ def pipe(parser, func):
         token, rest = parser(inp)
         if token is not None:
             token = func(token)
-            if not isinstance(token, list):
+            if token is None:
+                rest = inp
+            elif not isinstance(token, list):
                 token = [token]
         return token, rest
     return wrapper
