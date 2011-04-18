@@ -1,15 +1,17 @@
-from lexer.tokens.basic import identifier, pcall, number, unit, color, string, spaces
+from lexer.tokens.basic import identifier, pcall, number, unit, color, string, spaces, alpha
 from lexer.tokens import Value, Variable, Color, Macro, Properties
 from lexer.parsers.parsers import _, EOL, inf
+from lexer.parsers.filters import join
 
 varval = (_('$')/0 - identifier) / Variable.get
 _expression = _(lambda inp: expression(inp))
 
+word = alpha * (1, inf) / join
 value = (
         pcall                   | 
         number - -unit >> Value | 
+        (color | word) >> Color | 
         identifier              | 
-        color >> Color          | 
         string                  | 
         varval
         )

@@ -27,7 +27,7 @@ sub:
     margin-top: $variable1
 
 alt:
-    color: #123456
+    color: green
     '''
     test = clear_lines(test)
     print parser(test)
