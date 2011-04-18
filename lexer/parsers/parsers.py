@@ -87,7 +87,10 @@ class Parser(object):
             elif min > max:
                 min, max = max, min
             if min > -1 and max > 0:
-                parser = compound.rep(self.parser, min, max)
+                if min == 0 and max == 1:
+                    parser = tools.opt(self.parser)
+                else:
+                    parser = compound.rep(self.parser, min, max)
         return Parser(parser)
     
     def __invert__(self):
