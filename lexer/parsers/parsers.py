@@ -11,6 +11,7 @@ from lexer.parsers.indent import Indentation
 
 # Infinity
 inf = float('inf')
+function = type(lambda: None)
 
 class Parser(object):
     def __init__(self, parser=basic.anychar):
@@ -23,14 +24,22 @@ class Parser(object):
         '''
         Either self or other matches
         '''
-        parser = compound.alter(self.parser, other.parser)
+        parser = compound.alter(self.parser, _(other).parser)
+        return Parser(parser)
+
+    def __ror__(self, other):
+        parser = compound.alter(_(other).parser, self.parser)
         return Parser(parser)
 
     def __sub__(self, other):
         '''
         Match self, then match other
         '''
-        parser = compound.seq(self.parser, other.parser)
+        parser = compound.seq(self.parser, _(other).parser)
+        return Parser(parser)
+
+    def __rsub__(self, other):
+        parser = compound.seq(_(other).parser, self.parser)
         return Parser(parser)
 
     def __div__(self, other):
@@ -92,7 +101,11 @@ class Parser(object):
         '''
         Match self, but not after other
         '''
-        parser = compound.seq(tools.but(other.parser), self.parser)
+        parser = compound.seq(tools.but(_(other).parser), self.parser)
+        return Parser(parser)
+
+    def __rxor__(self, other):
+        parser = compound.seq(tools.but(self.parser), _(other).parser)
         return Parser(parser)
 
     def __and__(self, other):

@@ -1,56 +1,7 @@
-from lexer.tokens import Value, Selector, Property, ComplexProperty, Variable, Color, Macro, Rule, Arguments, Properties
-from lexer.tokens.basic import identifier, spaces, number, pcall, unit, color, string
-from lexer.parsers.parsers import _, W, EOL, inf
-from lexer.parsers.filters import join
+from lexer.parsers.parsers import inf
 from lexer.parsers.helpers import clear_lines
+from lexer.tokens.statements import vardef, cmacro, crule
 import lexer.parsers.basic as basic
-
-varval = (_('$')/0 - identifier) / Variable.get
-value = (
-        pcall |
-        number - -unit >> Value |
-        identifier |
-        color >> Color |
-        string |
-        varval
-        )
-vallist = value.commalist
-
-values = (
-        (value - ((_(',').opt - spaces)/0 - value) * inf)
-        ) >> Properties
-
-vardef = identifier - W('=')/0 - value - EOL >> Variable
-
-cmacrocall = (
-        _('%')/0 - identifier - (-(value.commalist).surround) - EOL
-        ) / Macro.call
-
-_cproperty = _(lambda inp: cproperty(inp))
-cselector = (_(['#.']).opt - identifier)/join - _(':')/0 - EOL >> Selector
-cproperty = (
-        identifier - (_(':') - spaces)/0 - values - EOL >> Property |
-        identifier - _('>')/0 - EOL -
-            (_cproperty.indent)
-            >> ComplexProperty |
-        cmacrocall
-        )
-
-_crule = _(lambda inp: crule(inp))
-crule = (
-        cselector -
-        ((cproperty | _crule).indent)
-        ) >> Rule
-
-cmacro = (
-        (W('@define').push()/0 - identifier -
-            -(identifier.commalist.surround >> Arguments) -
-        (_(':'))/0 - EOL -
-        (cproperty.indent)
-        ) >> Macro).drop()
-
-#print (number - unit >> Value)('12px')
-
 
 parser = (vardef/0 | cmacro/0 | crule) * inf
 
@@ -138,14 +89,20 @@ body:
         border-radius: 1em
         background: url(/images/wooden_bg.jpg)
         margin-left: $var1 * 0.1
+.wrapper:
+    padding: 0.5em
+    border: 1px solid gray
+    border-radius: 1em
+    background: url(/images/wooden_bg.jpg)
+    margin-left: $var1 * 0.1
     '''
     print parser(clear_lines(test))
 
 #test_01()
 #test_02()
 #test_03()
-#test_04()
-test_05()
+test_04()
+#test_05()
 
 #print ((((A^EOL)*inf) / join - EOL) >> indent_block)('''    dsafvfd
     #sdfvsfvd
