@@ -1,10 +1,115 @@
 from lexer.parsers.tokens import Token, TokenError
 from lexer.parsers.state import state
 
+class Unit(object):
+    _conv = {
+        'length': {
+            'mm': 1.0,
+            'cm': 10.0,
+            'in': 25.4,
+            'pt': 25.4 / 72,
+            'pc': 25.4 / 6
+        },
+        'time': {
+            'ms': 1.0,
+            's' : 1000.0
+        },
+        'freq': {
+            'Hz' : 1.0,
+            'kHz': 1000.0
+        }
+    }
+    _conv_mapping = {}
+    for t, m in _conv.iteritems():
+        for k in m:
+            _conv_mapping[k] = t
+
+    @classmethod
+    def convert(cls, val1, val2):
+        if val1.unit == val2.unit:
+            return val1, val2
+
+        if not (val1.unit and val2.unit):
+            if val1.unit:
+                val2.unit = val1.unit
+            else:
+                val1.unit = val2.unit
+            return val1, val2
+
+        try:
+            table1 = cls._conv_mapping[val1.unit]
+        except KeyError:
+            raise ArithmeticError('Type \'%s\' is unconvertible' % (val1.unit))
+
+        try:
+            table2 = cls._conv_mapping[val2.unit]
+        except KeyError:
+            raise ArithmeticError('Type \'%s\' is unconvertible' % (val2.unit))
+
+        if table1 != table2:
+            raise ArithmeticError('Types \'%s\' and \'%s\' are incompatible' % (val1.unit, val2.unit))
+
+        koeff1 = cls._conv[table1][val1.unit]
+        koeff2 = cls._conv[table2][val2.unit]
+        val = Value()
+        val.value, val.unit = (float(val1) / koeff2 * koeff1, val2.unit)
+        return val, val2
+
+    @classmethod
+    def coerce(cls, meth):
+        def wrapper(self, other):
+            a, b = cls.convert(self, other)
+            result = Value()
+            result.value = meth(a, b)
+            result.unit = a.unit
+            return result
+        return wrapper
+
 class Value(Token):
     __slots__ = ('value', 'unit')
     def __str__(self):
         return '%s%s' % (self.value, self.unit)
+
+    @Unit.coerce
+    def __add__(self, other):
+        return float(self) + float(other)
+    __radd__ = __add__
+
+    @Unit.coerce
+    def __mul__(self, other):
+        return float(self) * float(other)
+    __rmul__ = __mul__
+
+    @Unit.coerce
+    def __rdiv__(self, other):
+        return float(self) / float(other)
+
+    @Unit.coerce
+    def __div__(self, other):
+        return float(other) / float(self)
+
+    @Unit.coerce
+    def __rmod__(self, other):
+        return int(self) % int(other)
+
+    @Unit.coerce
+    def __mod__(self, other):
+        return int(other) % int(self)
+
+    @Unit.coerce
+    def __sub__(self, other):
+        print self, other
+        return float(other) - float(self)
+
+    @Unit.coerce
+    def __rsub__(self, other):
+        return float(self) - float(other)
+
+    def __int__(self):
+        return int(self.value)
+
+    def __float__(self):
+        return float(self.value)
 
 class Selector(Token):
     def init(self, token):
@@ -262,3 +367,87 @@ class Properties(Token):
     def __str__(self):
         return ','.join(str(p) for p in self.properties)
 
+class Expression(Token):
+    __slots__ = ('expression',)
+
+    
+    class Op(object):
+        ASSO_LEFT = (-1, 0)
+        ASSO_RIGHT = (-1,)
+
+        asso = ASSO_LEFT
+        prio = 0
+        name = ''
+        func = None
+
+        def __init__(self, name, prio=0, asso=ASSO_LEFT, func=lambda stack: None):
+            self.name = name
+            self.prio = prio
+            self.asso = asso
+            self.func = func
+
+        def __call__(self, stack):
+            return stack.append(self.func(stack))
+
+        def __gt__(self, other):
+            return cmp(self.prio, other.prio) in self.asso
+
+        def __str__(self):
+            return self.name
+
+        __repr__ = __str__
+
+    _operations = {
+            '^': Op('^', 3, Op.ASSO_RIGHT, func=lambda s: s.pop() ** s.pop()),
+            '*': Op('*', 2, func=lambda s: s.pop() * s.pop()),
+            '/': Op('/', 2, func=lambda s: s.pop() / s.pop()),
+            '%': Op('%', 2, func=lambda s: s.pop() % s.pop()),
+            '+': Op('+', 1, func=lambda s: s.pop() + s.pop()),
+            '-': Op('-', 1, func=lambda s: s.pop() - s.pop()),
+            }
+
+    def init(self, token):
+        print token
+        self.expression = []
+        stack = []
+        for item in token:
+            if isinstance(item, Value):
+                self.expression.append(item)
+            elif item in self._operations:
+                op = self._operations[item]
+                while stack and isinstance(stack[-1], self.Op) and op > stack[-1]:
+                    self.expression.append(stack.pop())
+                stack.append(op)
+            elif item == '(':
+                stack.append(item)
+            elif item == ')':
+                while stack and stack[-1] != '(':
+                    self.expression.append(stack.pop())
+                if stack:
+                    try:
+                        stack.pop()
+                    except IndexError:
+                        raise ArithmeticError('Unbalanched parenthesis in expression')
+                else:
+                    self.expression.append(item)
+            else:
+                self.expression.append(item)
+
+        while stack:
+            item = stack.pop()
+            if item == '(':
+                raise ArithmeticError('Unbalanched parenthesis in expression')
+            self.expression.append(item)
+        print self.expression
+
+    def eval(self, context={}):
+        stack = []
+        for item in self.expression:
+            if isinstance(item, self.Op):
+                item(stack)
+            else:
+                stack.append(item)
+        return stack.pop()
+
+    def __str__(self):
+        return ','.join(str(i) for i in self.expression)
