@@ -16,10 +16,10 @@ cpclass = (':' - identifier) / join
 sign = _(['+-'])
 number = digit*(1,inf)
 nthchild_arg = (
-        _('even') |
-        _('odd')  |
+        sign.opt - number |
         sign.opt - number - 'n' - sign - number |
-        sign.opt - number
+        'even' |
+        'odd'
         ) / join
 nthchild = (':nth-' - _('last-').opt - (_('child')|_('of-type')) - '(' - nthchild_arg - ')') / join
 
@@ -29,8 +29,8 @@ catom = (
         (cmodifier * (1, inf)) | (ctag - cmodifier * inf)
         ) / join
 
-cexpression_tail = spaces/0 - (['+>'] - spaces/0).opt - catom
-cexpression = catom - cexpression_tail*inf - spaces/0
+cexpression_tail = spaces/' ' - (['+>'] - spaces/' ').opt - catom
+cexpression = (catom - cexpression_tail*inf - spaces/0) / join
 
 cselector = cexpression.commalist - _(':')/0 - EOL >> Selector
 cproperty = (
