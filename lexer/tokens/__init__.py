@@ -3,6 +3,11 @@ from lexer.parsers.state import state
 
 class Unit(object):
     _conv = {
+        'scale': {
+            'em': 1.0,
+            'ex': 1.8,
+            '%' : 100.0
+        },
         'length': {
             'mm': 1.0,
             'cm': 10.0,
