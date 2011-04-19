@@ -49,7 +49,10 @@ class Parser(object):
         if not other:
             parser = tools.skip(self.parser)
         else:
-            parser = filters.pipe(self.parser, other)
+            if isinstance(other, basestring):
+                parser = filters.pipe(self.parser, filters.repl(other))
+            else:
+                parser = filters.pipe(self.parser, other)
         return Parser(parser)
 
     def __neg__(self):
@@ -115,7 +118,7 @@ class Parser(object):
         '''
         Match self only if other function permits so
         '''
-        parser = filters.check(self.parser, other)
+        parser = filters.pipe(self.parser, filters.check(other))
         return Parser(parser)
 
     def __rshift__(self, other):
@@ -157,6 +160,10 @@ class Parser(object):
         combinator = getattr(tools, name, None)
         if combinator:
             parser = combinator(self.parser)
+        return Parser(parser)
+
+    def __getitem__(self, index):
+        parser = filters.pipe(self.parser, filters.take(index))
         return Parser(parser)
 
 # Match string or char range
