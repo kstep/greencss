@@ -31,7 +31,7 @@ class Token(object):
             except IndexError:
                 setattr(self, k, '')
 
-    def render(self, parent=None):
+    def render(self, context={}):
         raise NotImplementedError
 
     def __str__(self):

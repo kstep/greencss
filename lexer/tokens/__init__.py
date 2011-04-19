@@ -75,13 +75,13 @@ class PseudoCall(Token):
     def init(self, token):
         self.name, self.args = token[0], token[1]
 
-    def render(self, parent=None):
+    def render(self, context={}):
         return '%s(%s)' % (self.name, self.args)
 
 class String(Token):
     __slots__ = ('value',)
 
-    def render(self, parent=None):
+    def render(self, context={}):
         if " " in self.value:
             return '"' + self.value + '"'
         else:
@@ -90,7 +90,7 @@ class String(Token):
 class Value(Token):
     __slots__ = ('value', 'unit')
 
-    def render(self, parent=None):
+    def render(self, context={}):
         return '%s%s' % (self.value, self.unit)
 
     @Unit.coerce
@@ -136,13 +136,13 @@ class Value(Token):
 class Selector(Token):
     def init(self, token):
         self.selector = token
-    def render(self, parent=None):
+    def render(self, context={}):
         return ', '.join(self.selector)
 
 class Property(Token):
     __slots__ = ('name', 'value')
-    def render(self, parent=None):
-        return '%s: %s;' % (self.name, self.value.render(self))
+    def render(self, context={}):
+        return '%s: %s;' % (self.name, self.value.render(context))
 
 class Variable(Token):
     variables = {}
@@ -151,7 +151,7 @@ class Variable(Token):
     def init(self, token):
         self.__class__.variables[token[0]] = token[1]
 
-    def render(self, parent=None):
+    def render(self, context={}):
         return str(self.variables)
 
     @classmethod
@@ -315,7 +315,7 @@ class Color(Value):
             except KeyError:
                 raise TokenError()
 
-    def render(self, parent=None):
+    def render(self, context={}):
         return self.value
 
 class Macro(Token):
@@ -330,8 +330,8 @@ class Macro(Token):
 
         self.__class__.macros[self.name] = self
 
-    def render(self, parent=None):
-        return '@define %s(%s) {\n  %s\n}' % (self.name, ', '.join(self.args), '\n  '.join(p.render(self) for p in self.body))
+    def render(self, context={}):
+        return '@define %s(%s) {\n  %s\n}' % (self.name, ', '.join(self.args), '\n  '.join(p.render(context) for p in self.body))
 
     @classmethod
     def call(cls, token):
@@ -364,7 +364,7 @@ class Rule(Token):
         self.selector = token[0]
         self.properties = token[1:]
 
-    def render(self, parent=None):
+    def render(self, context={}):
         return '%s {\n  %s\n}' % (
                 self.selector.render(self),
                 '\n  '.join(p.render(self) for p in self.properties))
@@ -377,15 +377,15 @@ class ComplexProperty(Token):
             t.name = head + t.name
         self.properties = tail
 
-    def render(self, parent=None):
-        return '\n  '.join(p.render(self) for p in self.properties)
+    def render(self, context={}):
+        return '\n  '.join(p.render(context) for p in self.properties)
 
 class Arguments(Token):
     __slots__ = ('args',)
     def init(self, token):
         self.args = list(token)
 
-    def render(self, parent=None):
+    def render(self, context={}):
         return ', '.join(self.args)
 
 class Values(Token):
@@ -393,8 +393,8 @@ class Values(Token):
     def init(self, token):
         self.values = list(token)
     
-    def render(self, parent=None):
-        return ' '.join(p.render(self) for p in self.values)
+    def render(self, context={}):
+        return ' '.join(p.render(context) for p in self.values)
 
 class Expression(Token):
     __slots__ = ('expression',)
@@ -475,6 +475,6 @@ class Expression(Token):
                 stack.append(item)
         return stack.pop()
 
-    def render(self, parent=None):
-        return self.eval().render(self)
+    def render(self, context={}):
+        return self.eval().render(context)
 
