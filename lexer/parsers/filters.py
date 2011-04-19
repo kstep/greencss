@@ -16,20 +16,17 @@ def pipe(parser, func):
 def join(token):
     return ''.join(token)
 
-def check(parser, predicate):
-    @wrap_parser('check', predicate)
-    def wrapper(inp):
-        token, rest = parser(inp)
-        if token is not None and predicate(token):
-            return token, rest
-        return None, inp
+def repl(string):
+    def wrapper(token):
+        return string
     return wrapper
 
-def take(parser, num):
-    @wrap_parser('take', num)
-    def wrapper(inp):
-        token, rest = parser(inp)
-        if token:
-            token = [token[num]]
-        return token, rest
+def check(predicate):
+    def wrapper(token):
+        return token if predicate(token) else None
+    return wrapper
 
+def take(num):
+    def wrapper(token):
+        return token[num]
+    return wrapper
