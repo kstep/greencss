@@ -12,7 +12,7 @@ value = (
         (color | word) >> Color      | 
         identifier     >> Value      | 
         string         >> String     | 
-        varval         >> Value
+        varval
         )
 
 expression_tail = spaces/0 - ['*/+-'] - spaces/0 - _('(').opt - spaces/0 - value - _(')').opt
