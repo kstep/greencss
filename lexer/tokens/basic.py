@@ -1,19 +1,22 @@
 from lexer.parsers.parsers import _, A, inf
 from lexer.tokens.charclasses import alpha, alnum, digit, hexdigit, space, delim
 from lexer.parsers.filters import join
+from lexer.parsers.compound import alter
+from lexer.parsers.literals import lit
 
 spaces = space * inf
 delims = delim * inf
 identifier = (alpha - alnum * inf) / join
-number = (
-        _('-').opt - digit * (1, inf) -
-        (_('.') - digit * (1, inf)).opt
-        ) / join
+
+uinteger = digit * (1, inf) / join
+integer = (_('-').opt - uinteger) / join
+number = (integer - ('.' - uinteger).opt) / join
+
 color = (_('#') - hexdigit * 6) / join
 pcall = identifier - (A^space).braced / join
 string = A.quoted
 
 _units = ['em', 'ex', 'px', 'cm', 'mm', 'in', 'pt', 'pc', 'deg', 'rad'
           'grad', 'ms', 's', 'Hz', 'kHz', '%']
-unit = reduce(lambda a, i: a | i, map(_, _units))
+unit = _(alter(*map(lit, _units)))
 
