@@ -31,8 +31,11 @@ class Token(object):
             except IndexError:
                 setattr(self, k, '')
 
+    def render(self, parent=None):
+        raise NotImplementedError
+
     def __str__(self):
-        return ''.join(str(getattr(self, k, '')) for k in self.__slots__)
+        return self.render()
 
     def __repr__(self):
         return str(self)

@@ -58,16 +58,34 @@ class Unit(object):
     @classmethod
     def coerce(cls, meth):
         def wrapper(self, other):
-            a, b = cls.convert(self, other)
+            b, a = cls.convert(other, self)
             result = Value()
             result.value = meth(a, b)
             result.unit = a.unit
             return result
         return wrapper
 
+class PseudoCall(Token):
+    __slots__ = ('name', 'args')
+    def init(self, token):
+        self.name, self.args = token[0], token[1]
+
+    def render(self, parent=None):
+        return '%s(%s)' % (self.name, self.args)
+
+class String(Token):
+    __slots__ = ('value',)
+
+    def render(self, parent=None):
+        if " " in self.value:
+            return '"' + self.value + '"'
+        else:
+            return self.value
+
 class Value(Token):
     __slots__ = ('value', 'unit')
-    def __str__(self):
+
+    def render(self, parent=None):
         return '%s%s' % (self.value, self.unit)
 
     @Unit.coerce
@@ -98,7 +116,6 @@ class Value(Token):
 
     @Unit.coerce
     def __sub__(self, other):
-        print self, other
         return float(other) - float(self)
 
     @Unit.coerce
@@ -114,13 +131,13 @@ class Value(Token):
 class Selector(Token):
     def init(self, token):
         self.selector = token
-    def __str__(self):
+    def render(self, parent=None):
         return ', '.join(self.selector)
 
 class Property(Token):
     __slots__ = ('name', 'value')
-    def __str__(self):
-        return '%s: %s' % (self.name, self.value)
+    def render(self, parent=None):
+        return '%s: %s;' % (self.name, self.value.render(self))
 
 class Variable(Token):
     variables = {}
@@ -129,7 +146,7 @@ class Variable(Token):
     def init(self, token):
         self.__class__.variables[token[0]] = token[1]
 
-    def __str__(self):
+    def render(self, parent=None):
         return str(self.variables)
 
     @classmethod
@@ -138,8 +155,8 @@ class Variable(Token):
             return '$'+name[0]
         return cls.variables.get(name[0], '')
 
-class Color(Token):
-    __slots__ = ('color',)
+class Color(Value):
+    __slots__ = ('value',)
     _names = {
         'aliceblue'            : '#f0f8ff',
         'antiquewhite'         : '#faebd7',
@@ -282,15 +299,19 @@ class Color(Token):
         'yellow'               : '#ffff00',
         'yellowgreen'          : '#9acd32'
     }
+
     def init(self, token):
         color = token[0]
         if color.startswith('#'):
-            self.color = color
+            self.value = color
         else:
             try:
-                self.color = self._names[color]
+                self.value = self._names[color]
             except KeyError:
                 raise TokenError()
+
+    def render(self, parent=None):
+        return self.value
 
 class Macro(Token):
     macros = {}
@@ -304,8 +325,8 @@ class Macro(Token):
 
         self.__class__.macros[self.name] = self
 
-    def __str__(self):
-        return '<%s(%s)[%s]>' % (self.name, ','.join(self.args), ';'.join(str(p) for p in self.body))
+    def render(self, parent=None):
+        return '@define %s(%s) {\n  %s\n}' % (self.name, ', '.join(self.args), '\n  '.join(p.render(self) for p in self.body))
 
     @classmethod
     def call(cls, token):
@@ -327,7 +348,7 @@ class Macro(Token):
         body = copy(macro.body)
         for prop in body:
             if isinstance(prop, Property):
-                for i, val in enumerate(prop.value.properties):
+                for i, val in enumerate(prop.value.values):
                     if isinstance(val, basestring) and val.startswith('$'):
                         prop.value.properties[i] = context.get(val[1:], '')
 
@@ -338,8 +359,10 @@ class Rule(Token):
         self.selector = token[0]
         self.properties = token[1:]
 
-    def __str__(self):
-        return '<%s{%s}>' % (self.selector, ';'.join(str(p) for p in self.properties))
+    def render(self, parent=None):
+        return '%s {\n  %s\n}' % (
+                self.selector.render(self),
+                '\n  '.join(p.render(self) for p in self.properties))
 
 class ComplexProperty(Token):
     __slots__ = ('properties',)
@@ -349,27 +372,27 @@ class ComplexProperty(Token):
             t.name = head + t.name
         self.properties = tail
 
-    def __str__(self):
-        return ';'.join(str(p) for p in self.properties)
+    def render(self, parent=None):
+        return '\n  '.join(p.render(self) for p in self.properties)
 
 class Arguments(Token):
     __slots__ = ('args',)
     def init(self, token):
         self.args = list(token)
-    def __str__(self):
+
+    def render(self, parent=None):
         return ', '.join(self.args)
 
-class Properties(Token):
-    __slots__ = ('properties',)
+class Values(Token):
+    __slots__ = ('values',)
     def init(self, token):
-        self.properties = list(token)
+        self.values = list(token)
     
-    def __str__(self):
-        return ','.join(str(p) for p in self.properties)
+    def render(self, parent=None):
+        return ' '.join(p.render(self) for p in self.values)
 
 class Expression(Token):
     __slots__ = ('expression',)
-
     
     class Op(object):
         ASSO_LEFT = (-1, 0)
@@ -407,7 +430,6 @@ class Expression(Token):
             }
 
     def init(self, token):
-        print token
         self.expression = []
         stack = []
         for item in token:
@@ -438,7 +460,6 @@ class Expression(Token):
             if item == '(':
                 raise ArithmeticError('Unbalanched parenthesis in expression')
             self.expression.append(item)
-        print self.expression
 
     def eval(self, context={}):
         stack = []
@@ -449,5 +470,6 @@ class Expression(Token):
                 stack.append(item)
         return stack.pop()
 
-    def __str__(self):
-        return ','.join(str(i) for i in self.expression)
+    def render(self, parent=None):
+        return self.eval().render(self)
+

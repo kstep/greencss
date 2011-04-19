@@ -10,7 +10,7 @@ number = (
         (_('.') - digit * (1, inf)).opt
         ) / join
 color = (_('#') - hexdigit * 6) / join
-pcall = (identifier - (A^space).braced) / join
+pcall = identifier - (A^space).braced / join
 string = A.quoted
 
 _units = ['em', 'ex', 'px', 'cm', 'mm', 'in', 'pt', 'pc', 'deg', 'rad'
