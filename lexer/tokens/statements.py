@@ -1,7 +1,7 @@
-from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments, IncludeFile
+from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments, IncludeFile, Metablock
 from greencss.lexer.tokens.basic import identifier, spaces, digit
 from greencss.lexer.parsers.parsers import _, EOL, W, inf
-from greencss.lexer.tokens.expressions import value, values, cmacrocall
+from greencss.lexer.tokens.expressions import value, values, cmacrocall, vallist
 from greencss.lexer.tokens.basic import string
 from greencss.lexer.parsers.filters import join
 
@@ -57,4 +57,9 @@ cmacro = (
 cinclude = (
         W('@include')/0 - string - EOL
         ) / IncludeFile
+
+cmetablock = (
+        ('@' - identifier)/join - spaces/0 - vallist.opt - (spaces - ':')/0 - EOL -
+            (crule * (1, inf)).indent
+        ) >> Metablock
 

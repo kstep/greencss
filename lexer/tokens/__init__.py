@@ -573,3 +573,19 @@ def IncludeFile(token):
     token, rest = _parser(data)
     return token or []
 
+class Metablock(Token):
+    def init(self, token):
+        self.name = token[0]
+        if isinstance(token[1], Values):
+            self.args, self.body = token[1].values, token[2:]
+        else:
+            self.args, self.body = [], token[1:]
+
+    def apply(self, context={}):
+        self.args = apply_context(self.args, context)
+        self.body = apply_context(self.body, context)
+
+    def render(self, context={}):
+        return '%s %s {\n%s}\n' % (self.name, ', '.join(a.render(context) for a in self.args),
+                ''.join(b.render(context) for b in self.body))
+

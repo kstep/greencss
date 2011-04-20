@@ -199,3 +199,20 @@ body {
 }
 '''.lstrip())
 
+def test_07():
+    '''
+    Metablocks
+    '''
+    test = '''
+@-moz-document url-prefix("http://example.com"), domain(example.org):
+    body:
+        background: red
+    '''
+    eq_(convert(test), '''
+@-moz-document url-prefix("http://example.com"), domain(example.org) {
+body {
+  background: #ff0000;
+}
+}
+'''.lstrip())
+
