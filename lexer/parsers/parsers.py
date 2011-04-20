@@ -166,6 +166,10 @@ class Parser(object):
         parser = filters.pipe(self.parser, filters.take(index))
         return Parser(parser)
 
+    def __getslice__(self, first, last):
+        parser = filters.pipe(self.parser, lambda t: t[first:last])
+        return Parser(parser)
+
 # Match string or char range
 _ = lambda word: word if isinstance(word, Parser) else Parser(
         literals.lit(word) if isinstance(word, basestring) else
