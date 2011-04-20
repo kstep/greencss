@@ -80,7 +80,7 @@ body:
         b:
             color: #aaaaaa
     '''
-    print eq_(convert(test), '''
+    eq_(convert(test), '''
 body {
   margin-left: 20px;
 }
@@ -127,7 +127,7 @@ body:
             image: url(/images/mybg.png)
             repeat: repeat-x
     '''
-    print eq_(convert(test), '''
+    eq_(convert(test), '''
 body {
   width: 90%;
   margin: 5em auto;
@@ -158,8 +158,25 @@ body #wrapper.selected {
 }
 '''.lstrip())
 
-test_01()
-test_02()
-test_03()
-test_04()
+def test_05():
+    '''
+    Method calls test
+    '''
+    test = '''
+variable = "defg"
 
+@define macro(var):
+    bottom: $var.length() * 2px
+
+body:
+    margin: "abc".length() * 1px
+    top: $variable.length() * 1px
+    %macro("xx")
+    '''
+    eq_(convert(test), '''
+body {
+  margin: 3.0px;
+  top: 4.0px;
+  bottom: 4.0px;
+}
+'''.lstrip())

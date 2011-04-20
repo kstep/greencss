@@ -2,6 +2,9 @@ from greencss.lexer.parsers.tokens import Token, TokenError
 from greencss.lexer.parsers.state import state
 from itertools import product
 
+def apply_context(alist, context={}):
+    return map(lambda i: i.apply(context) or i, alist)
+
 class Unit(object):
     _conv = {
         'scale': {
@@ -88,6 +91,12 @@ class String(Token):
         else:
             return self.value
 
+    def length(self):
+        value = Value()
+        value.value = len(self.value)
+        value.unit = ''
+        return value
+
 class Value(Token):
     __slots__ = ('value', 'unit')
 
@@ -153,7 +162,7 @@ class Property(Token):
         return '%s: %s;' % (self.name, self.value.render(context))
 
     def apply(self, context={}):
-        self.value.apply(context)
+        self.value = self.value.apply(context) or self.value
 
 class Variable(Token):
     variables = {}
@@ -182,7 +191,7 @@ class Variable(Token):
 
             raise NameError('Variable \'%s\' is not defined' % (name))
 
-    class var(Value):
+    class var(object):
         def __new__(cls, name=''):
             self = object.__new__(cls)
             self.name = name
@@ -192,10 +201,9 @@ class Variable(Token):
             value = context.get(self.name, None) or Variable.variables.get(self.name, None)
             if value is None or value is self:
                 raise NameError('Variable \'%s\' is not defined' % (self.name))
-            self.value = value.value
-            self.unit = value.unit
+            return value
 
-class Color(Value):
+class Color(Token):
     __slots__ = ('value',)
     _names = {
         'aliceblue'            : '#f0f8ff',
@@ -370,10 +378,7 @@ class Macro(Token):
 
     @classmethod
     def call(cls, token):
-        if len(token) > 1:
-            name, args = token[0], token[1:]
-        else:
-            name, args = token[0], []
+        name, args = token[0], token[1:]
 
         try:
             macro = cls.macros[name]
@@ -387,8 +392,7 @@ class Macro(Token):
         context = dict(zip(macro.args, args))
         from copy import deepcopy as copy
         body = copy(macro.body)
-        for item in body:
-            item.apply(context)
+        body = apply_context(body, context)
         return body
 
 class Rule(Token):
@@ -403,10 +407,8 @@ class Rule(Token):
                 self.properties.append(p)
 
     def apply(self, context={}):
-        for p in self.properties:
-            p.apply(context)
-        for c in self.children:
-            p.apply(context)
+        self.properties = apply_context(self.properties, context)
+        self.children = apply_context(self.children, context)
 
     def render(self, context={}):
         result = ''
@@ -450,8 +452,7 @@ class Values(Token):
         return ' '.join(p.render(context) for p in self.values)
 
     def apply(self, context={}):
-        for v in self.values:
-            v.apply(context)
+        self.values = apply_context(self.values, context)
 
 class Expression(Token):
     __slots__ = ('expression',)
@@ -539,6 +540,31 @@ class Expression(Token):
         return self.eval().render(context)
 
     def apply(self, context={}):
-        for e in self.expression:
-            e.apply(context)
+        self.expression = apply_context(self.expression, context)
+
+def MethodCall(token):
+    if len(token) == 1:
+        return token
+    
+    value, method, args = token[0], token[1], token[2:]
+    if Variable.is_in_macro():
+        class var(object):
+            def apply(self, context={}):
+                self.value = self.value.apply(context) or self.value
+                return getattr(self.value, self.method)(*self.args)
+
+        result = var()
+        result.value = value
+        result.method = method
+        result.args = args
+    else:
+        result = getattr(value, method)(*args)
+    
+    return result
+
+    #def apply(self, context={}):
+        #pass
+        #self.value.apply(context)
+        #for a in self.args:
+            #a.apply(context)
 
