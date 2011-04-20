@@ -13,7 +13,10 @@ variable1 = 15px
     margin-left: 5px
 
 @define macro2(a, b,c):
-    margin: 1px $c
+    margin: 1px $c + 2
+    i:
+        margin->
+            top: $b * 2 / $a
 
 sub:
     font-face:  sans-serif, sans-serif
@@ -89,11 +92,11 @@ body:
     '''
     print convert(test)
 
-#test_01()
-#test_02()
-#test_03()
+test_01()
+test_02()
+test_03()
 #test_04()
-test_05()
+#test_05()
 
 #print ((((A^EOL)*inf) / join - EOL) >> indent_block)('''    dsafvfd
     #sdfvsfvd
