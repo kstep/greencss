@@ -14,6 +14,63 @@ inf = float('inf')
 function = type(lambda: None)
 
 class Parser(object):
+    '''
+    This class defines syntax for parser building by wrapping different underlying functional parsers.
+
+    A - B - C
+        A, followed by B and then C
+
+    A | B | C
+        either A, B or C, whatever matches first
+
+    A / F
+        A replaced by F (filter function, zero or string)
+
+    A >> B
+        A wrapped into B (function or class)
+
+    A ^ B
+        A, but not after B, i.e. exclude B from A
+
+    -A
+        A is optional, i.e. match zero to one A
+
+    ~A
+        don't match A
+
+    A * N
+        repeat A exactly N times, if N is inf, then repeat from 0 to infinity
+
+    A * (N, M)
+        repeat A from N to M times, N < M
+
+    A & P
+        match A only if matched token passes test by predicate P
+
+    A.T
+        apply tool T to A (see lexer.parser.tools for details)
+
+    A[I]
+        get Ith token from matched tokens
+
+    A[N:M]
+        get tokens from Nth up to Mth
+
+    A.push(), A.st(), A.pop(), A.drop()
+        operations on state stack:
+            * A.push() - match and push token into stack,
+            * A.st() - match and check against top stacked token for equality, stack is unchanged,
+            * A.pop() - pop top stacked token, match and check against popped token,
+            * A.drop() - match unconditionally, then just drop top stacked token.
+
+    A(input)
+        Run parser for given input (must be a string), returns a pair of matched tokens and the rest
+        unparsed part of string. If parser totally failed to parse input string, then the result will be
+        None, otherwise it will be a list of matched tokens (empty list is possible, but it only means all
+        tokens are swallowed by parser and doesn't mean it failed). If parser succeed to parse the whole
+        string, then the rest part will be empty string.
+    '''
+
     def __init__(self, parser=basic.anychar):
         self.parser = parser
 
