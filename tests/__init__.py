@@ -180,3 +180,22 @@ body {
   bottom: 4.0px;
 }
 '''.lstrip())
+
+def test_06():
+    '''
+    Include file directive
+    '''
+    test = '''
+@include "./tests/test.gcss"
+body:
+    margin-top: 10px
+    '''
+    eq_(convert(test), '''
+body {
+  background: #ff0000;
+}
+body {
+  margin-top: 10px;
+}
+'''.lstrip())
+

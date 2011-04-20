@@ -1,7 +1,8 @@
-from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments
+from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments, IncludeFile
 from greencss.lexer.tokens.basic import identifier, spaces, digit
 from greencss.lexer.parsers.parsers import _, EOL, W, inf
 from greencss.lexer.tokens.expressions import value, values, cmacrocall
+from greencss.lexer.tokens.basic import string
 from greencss.lexer.parsers.filters import join
 
 vardef = identifier - W('=')/0 - value - EOL >> Variable
@@ -52,4 +53,8 @@ cmacro = (
         (_(':'))/0 - EOL -
         (cproperty | _crule).indent >> Macro
         ).drop()
+
+cinclude = (
+        W('@include')/0 - string - EOL
+        ) / IncludeFile
 

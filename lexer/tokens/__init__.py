@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from greencss.lexer.parsers.tokens import Token, TokenError
 from greencss.lexer.parsers.state import state
 from itertools import product
@@ -562,9 +563,13 @@ def MethodCall(token):
     
     return result
 
-    #def apply(self, context={}):
-        #pass
-        #self.value.apply(context)
-        #for a in self.args:
-            #a.apply(context)
+def IncludeFile(token):
+    from greencss.lexer.parsers.helpers import clear_lines
+    from greencss import _parser
+
+    filename = token[0]
+    with open(filename, 'rb') as f:
+        data = clear_lines(f.read())
+    token, rest = _parser(data)
+    return token or []
 

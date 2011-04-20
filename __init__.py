@@ -1,8 +1,8 @@
 
-from lexer.parsers.parsers import inf
-from lexer.parsers.helpers import clear_lines
-from lexer.tokens.statements import vardef, cmacro, crule
-_parser = (vardef/0 | cmacro/0 | crule) * inf
+from greencss.lexer.parsers.parsers import inf
+from greencss.lexer.parsers.helpers import clear_lines
+from greencss.lexer.tokens.statements import vardef, cmacro, crule, cinclude
+_parser = (vardef/0 | cmacro/0 | cinclude | crule) * inf
 
 def convert(data):
     data = clear_lines(data)
