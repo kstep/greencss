@@ -1,9 +1,5 @@
-from lexer.parsers.parsers import inf
-from lexer.parsers.helpers import clear_lines
-from lexer.tokens.statements import vardef, cmacro, crule
-import lexer.parsers.basic as basic
 
-parser = (vardef/0 | cmacro/0 | crule) * inf
+from greencss import convert
 
 def test_01():
     '''
@@ -29,8 +25,7 @@ sub:
 alt:
     color: green
     '''
-    test = clear_lines(test)
-    print parser(test)
+    print convert(test)
 
 def test_02():
     '''
@@ -44,9 +39,7 @@ sub:
         bottom: -10px
         top: 8px
     '''
-    test = clear_lines(test)
-    print test
-    print parser(test)
+    print convert(test)
 
 def test_03():
     '''
@@ -62,17 +55,15 @@ body:
         b:
             color: #aaaaaa
     '''
-    test = clear_lines(test)
-    print test
-    print parser(test)
+    print convert(test)
 
 def test_04():
     '''
     Real stylesheet transformation
     '''
     f = open('/home/kstep/projects/self/serpent/serpent/ui/styles/style.ccss','rb')
-    test = clear_lines(f.read())
-    print parser(test), basic.lastline
+    test = f.read()
+    print convert(test)
 
 def test_05():
     test = '''
@@ -96,13 +87,13 @@ body:
     background: url(/images/wooden_bg.jpg)
     margin-left: $var1 * 0.1
     '''
-    print parser(clear_lines(test))
+    print convert(test)
 
 #test_01()
 #test_02()
 #test_03()
-test_04()
-#test_05()
+#test_04()
+test_05()
 
 #print ((((A^EOL)*inf) / join - EOL) >> indent_block)('''    dsafvfd
     #sdfvsfvd
