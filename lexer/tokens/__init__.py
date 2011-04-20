@@ -64,7 +64,7 @@ class Unit(object):
     @classmethod
     def coerce(cls, meth):
         def wrapper(self, other):
-            b, a = cls.convert(other, self)
+            a, b = cls.convert(self, other)
             result = Value()
             result.value = meth(a, b)
             result.unit = a.unit
