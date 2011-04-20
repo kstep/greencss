@@ -391,6 +391,7 @@ class Rule(Token):
         print self.selector.values, super_selector, children_selector
         context['&'] = children_selector
         result += '\n'.join(map(lambda c: c.render(context), self.children))
+        context['&'] = super_selector
         return result
 
 class ComplexProperty(Token):
