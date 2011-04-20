@@ -1,5 +1,6 @@
 from lexer.parsers.tokens import Token, TokenError
 from lexer.parsers.state import state
+from itertools import product
 
 class Unit(object):
     _conv = {
@@ -135,9 +136,16 @@ class Value(Token):
 
 class Selector(Token):
     def init(self, token):
-        self.selector = token
+        self.values = token
+
+    @staticmethod
+    def inherit(pair):
+        base, s = pair
+        return (s.replace('&', base) if '&' in s else base + ' ' + s).strip()
+
     def render(self, context={}):
-        return ', '.join(self.selector)
+        base = context.get('&', [''])
+        return ', '.join(map(self.inherit, product(base, self.values)))
 
 class Property(Token):
     __slots__ = ('name', 'value')
@@ -362,12 +370,28 @@ class Macro(Token):
 class Rule(Token):
     def init(self, token):
         self.selector = token[0]
-        self.properties = token[1:]
+        self.children = []
+        self.properties = []
+        for p in token[1:]:
+            if isinstance(p, Rule):
+                self.children.append(p)
+            else:
+                self.properties.append(p)
 
     def render(self, context={}):
-        return '%s {\n  %s\n}' % (
-                self.selector.render(self),
-                '\n  '.join(p.render(self) for p in self.properties))
+        result = ''
+
+        if self.properties:
+            result += '%s {\n  %s\n}\n' % (
+                self.selector.render(context),
+                '\n  '.join(p.render(context) for p in self.properties))
+
+        super_selector = context.get('&', [''])
+        children_selector = map(Selector.inherit, product(super_selector, self.selector.values))
+        print self.selector.values, super_selector, children_selector
+        context['&'] = children_selector
+        result += '\n'.join(map(lambda c: c.render(context), self.children))
+        return result
 
 class ComplexProperty(Token):
     __slots__ = ('properties',)
