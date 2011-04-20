@@ -34,6 +34,9 @@ class Token(object):
     def render(self, context={}):
         raise NotImplementedError
 
+    def apply(self, context={}):
+        pass
+
     def __str__(self):
         return self.render()
 

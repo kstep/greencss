@@ -88,17 +88,11 @@ class String(Token):
         else:
             return self.value
 
-    def apply(self, context={}):
-        pass
-
 class Value(Token):
     __slots__ = ('value', 'unit')
 
     def render(self, context={}):
         return '%s%s' % (self.value, self.unit)
-
-    def apply(self, context={}):
-        pass
 
     @Unit.coerce
     def __add__(self, other):
