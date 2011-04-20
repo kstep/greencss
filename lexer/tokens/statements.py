@@ -40,16 +40,16 @@ cproperty = (
         cmacrocall
         )
 
-cmacro = (
-        W('@define').push()/0 - identifier -
-            -(identifier.commalist.surround >> Arguments) -
-        (_(':'))/0 - EOL -
-        cproperty.indent >> Macro
-        ).drop()
-
 _crule = _(lambda inp: crule(inp))
 crule = (
         cselector -
         ((cproperty | _crule).indent)
         ) >> Rule
+
+cmacro = (
+        W('@define').push()/0 - identifier -
+            -(identifier.commalist.surround >> Arguments) -
+        (_(':'))/0 - EOL -
+        (cproperty | _crule).indent >> Macro
+        ).drop()
 

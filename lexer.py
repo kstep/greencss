@@ -92,10 +92,10 @@ body:
     '''
     print convert(test)
 
-test_01()
-test_02()
-test_03()
-#test_04()
+#test_01()
+#test_02()
+#test_03()
+test_04()
 #test_05()
 
 #print ((((A^EOL)*inf) / join - EOL) >> indent_block)('''    dsafvfd

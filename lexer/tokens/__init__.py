@@ -88,11 +88,17 @@ class String(Token):
         else:
             return self.value
 
+    def apply(self, context={}):
+        pass
+
 class Value(Token):
     __slots__ = ('value', 'unit')
 
     def render(self, context={}):
         return '%s%s' % (self.value, self.unit)
+
+    def apply(self, context={}):
+        pass
 
     @Unit.coerce
     def __add__(self, other):
@@ -152,6 +158,9 @@ class Property(Token):
     def render(self, context={}):
         return '%s: %s;' % (self.name, self.value.render(context))
 
+    def apply(self, context={}):
+        self.value.apply(context)
+
 class Variable(Token):
     variables = {}
     instance = None
@@ -163,10 +172,34 @@ class Variable(Token):
         return str(self.variables)
 
     @classmethod
-    def get(cls, name):
-        if state.stack and state.stack[-1].token and '@define' in state.stack[-1].token:
-            return '$'+name[0]
-        return cls.variables.get(name[0], '')
+    def is_in_macro(cls):
+        return state.stack and state.stack[-1].token and '@define' in state.stack[-1].token
+
+    @classmethod
+    def get(cls, token):
+        name = token[0]
+        try:
+            return cls.variables[name]
+        except KeyError:
+            if cls.is_in_macro():
+                value = cls.var(name)
+                cls.variables[name] = value
+                return value
+
+            raise NameError('Variable \'%s\' is not defined' % (name))
+
+    class var(Value):
+        def __new__(cls, name=''):
+            self = object.__new__(cls)
+            self.name = name
+            return self
+
+        def apply(self, context={}):
+            value = context.get(self.name, None) or Variable.variables.get(self.name, None)
+            if value is None or value is self:
+                raise NameError('Variable \'%s\' is not defined' % (self.name))
+            self.value = value.value
+            self.unit = value.unit
 
 class Color(Value):
     __slots__ = ('value',)
@@ -343,28 +376,25 @@ class Macro(Token):
 
     @classmethod
     def call(cls, token):
-        macro = cls.macros.get(token[0])
-
-        if not macro:
-            raise NameError('Macro \'%s\' is not defined' % token[0])
-
-        if len(macro.args) != len(token)-1:
-            raise TypeError('Macro %s requires exactly %d arguments (%d given)' % (macro.name,
-                len(macro.args), len(token)-1))
-
-        context = {}
-        context.update(Variable.variables)
         if len(token) > 1:
-            context.update(zip(macro.args, token[1:]))
+            name, args = token[0], token[1:]
+        else:
+            name, args = token[0], []
 
+        try:
+            macro = cls.macros[name]
+        except KeyError:
+            raise NameError('Macro \'%s\' is not defined' % (name))
+
+        if len(macro.args) != len(args):
+            raise TypeError('Macro %s requires exactly %d arguments (%d given)' % (macro.name,
+                len(macro.args), len(args)))
+
+        context = dict(zip(macro.args, args))
         from copy import deepcopy as copy
         body = copy(macro.body)
-        for prop in body:
-            if isinstance(prop, Property):
-                for i, val in enumerate(prop.value.values):
-                    if isinstance(val, basestring) and val.startswith('$'):
-                        prop.value.properties[i] = context.get(val[1:], '')
-
+        for item in body:
+            item.apply(context)
         return body
 
 class Rule(Token):
@@ -378,6 +408,12 @@ class Rule(Token):
             else:
                 self.properties.append(p)
 
+    def apply(self, context={}):
+        for p in self.properties:
+            p.apply(context)
+        for c in self.children:
+            p.apply(context)
+
     def render(self, context={}):
         result = ''
 
@@ -388,10 +424,13 @@ class Rule(Token):
 
         super_selector = context.get('&', [''])
         children_selector = map(Selector.inherit, product(super_selector, self.selector.values))
-        print self.selector.values, super_selector, children_selector
         context['&'] = children_selector
-        result += '\n'.join(map(lambda c: c.render(context), self.children))
+
+        if self.children:
+            result += '\n'.join(map(lambda c: c.render(context), self.children))
+
         context['&'] = super_selector
+
         return result
 
 def ComplexProperty(token):
@@ -416,6 +455,10 @@ class Values(Token):
     def render(self, context={}):
         return ' '.join(p.render(context) for p in self.values)
 
+    def apply(self, context={}):
+        for v in self.values:
+            v.apply(context)
+
 class Expression(Token):
     __slots__ = ('expression',)
     
@@ -433,6 +476,9 @@ class Expression(Token):
             self.prio = prio
             self.asso = asso
             self.func = func
+
+        def apply(self, context={}):
+            pass
 
         def __call__(self, stack):
             return stack.append(self.func(stack))
@@ -497,4 +543,8 @@ class Expression(Token):
 
     def render(self, context={}):
         return self.eval().render(context)
+
+    def apply(self, context={}):
+        for e in self.expression:
+            e.apply(context)
 
