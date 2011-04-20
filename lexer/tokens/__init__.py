@@ -394,16 +394,11 @@ class Rule(Token):
         context['&'] = super_selector
         return result
 
-class ComplexProperty(Token):
-    __slots__ = ('properties',)
-    def init(self, token):
-        head, tail = token[0], token[1:]
-        for t in tail:
-            t.name = head + t.name
-        self.properties = tail
-
-    def render(self, context={}):
-        return '\n  '.join(p.render(context) for p in self.properties)
+def ComplexProperty(token):
+    head, tail = token[0], token[1:]
+    for t in tail:
+        t.name = head + t.name
+    return tail
 
 class Arguments(Token):
     __slots__ = ('args',)

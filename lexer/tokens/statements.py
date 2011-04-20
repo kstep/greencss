@@ -35,9 +35,8 @@ cexpression = (catom - cexpression_tail*inf - spaces/0) / join
 cselector = cexpression.commalist - _(':')/0 - EOL >> Selector
 cproperty = (
         identifier - (':' - spaces)/0 - values - EOL >> Property |
-        identifier - _('>')/0 - EOL -
-            (_cproperty.indent)
-            >> ComplexProperty |
+        (identifier - _('>')/0 - EOL -
+            _cproperty.indent) / ComplexProperty |
         cmacrocall
         )
 
