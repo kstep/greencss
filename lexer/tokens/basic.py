@@ -1,8 +1,8 @@
-from lexer.parsers.parsers import _, A, inf
-from lexer.tokens.charclasses import alpha, alnum, digit, hexdigit, space, delim
-from lexer.parsers.filters import join
-from lexer.parsers.compound import alter
-from lexer.parsers.literals import lit
+from greencss.lexer.parsers.parsers import _, A, inf
+from greencss.lexer.tokens.charclasses import alpha, alnum, digit, hexdigit, space, delim
+from greencss.lexer.parsers.filters import join
+from greencss.lexer.parsers.compound import alter
+from greencss.lexer.parsers.literals import lit
 
 spaces = space * inf
 delims = delim * inf

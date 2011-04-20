@@ -1,6 +1,6 @@
 __all__ = ['space', 'delim', 'alpha', 'alnum', 'digit', 'hexdigit']
 
-from lexer.parsers.parsers import _
+from greencss.lexer.parsers.parsers import _
 delim = _([' \t\n\r'])
 space = _([' \t'])
 alpha = _(['A','Z', 'a','z', '_-'])

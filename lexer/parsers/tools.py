@@ -1,10 +1,10 @@
-from lexer.parsers.helpers import wrap_parser
-from lexer.parsers.compound import seq, alter, star
-from lexer.parsers.literals import lit, charclass
-from lexer.parsers.basic import anychar
-from lexer.parsers.filters import join, pipe
-from lexer.parsers.state import state
-from lexer.parsers.indent import Indentation
+from greencss.lexer.parsers.helpers import wrap_parser
+from greencss.lexer.parsers.compound import seq, alter, star
+from greencss.lexer.parsers.literals import lit, charclass
+from greencss.lexer.parsers.basic import anychar
+from greencss.lexer.parsers.filters import join, pipe
+from greencss.lexer.parsers.state import state
+from greencss.lexer.parsers.indent import Indentation
 
 def peek(parser):
     @wrap_parser('peek', parser)

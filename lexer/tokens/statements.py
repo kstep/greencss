@@ -1,8 +1,8 @@
-from lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments
-from lexer.tokens.basic import identifier, spaces, digit
-from lexer.parsers.parsers import _, EOL, W, inf
-from lexer.tokens.expressions import value, values, cmacrocall
-from lexer.parsers.filters import join
+from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments
+from greencss.lexer.tokens.basic import identifier, spaces, digit
+from greencss.lexer.parsers.parsers import _, EOL, W, inf
+from greencss.lexer.tokens.expressions import value, values, cmacrocall
+from greencss.lexer.parsers.filters import join
 
 vardef = identifier - W('=')/0 - value - EOL >> Variable
 

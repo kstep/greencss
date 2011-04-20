@@ -1,4 +1,4 @@
-from lexer.parsers.helpers import wrap_parser
+from greencss.lexer.parsers.helpers import wrap_parser
 
 def pipe(parser, func):
     @wrap_parser('filter', func)

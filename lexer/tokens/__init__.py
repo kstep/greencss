@@ -1,5 +1,5 @@
-from lexer.parsers.tokens import Token, TokenError
-from lexer.parsers.state import state
+from greencss.lexer.parsers.tokens import Token, TokenError
+from greencss.lexer.parsers.state import state
 from itertools import product
 
 class Unit(object):

@@ -1,5 +1,5 @@
 
-from lexer.parsers.helpers import wrap_parser
+from greencss.lexer.parsers.helpers import wrap_parser
 
 def lit(w):
     @wrap_parser('lit', w)
@@ -51,7 +51,7 @@ def regexp(rex):
     return wrapper
 
 def word(w, border='\t '):
-    from lexer.parsers.compound import seq, star
+    from greencss.lexer.parsers.compound import seq, star
     border = star(charclass(border))
     return wrap_parser('word', w)(
             seq(border, lit(w), border)

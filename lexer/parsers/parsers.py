@@ -1,13 +1,13 @@
 
 __all__ = ['_', 'T', 'F', 'A', 'W', 'EOL', 'EOF', 'inf']
 
-import lexer.parsers.compound as compound
-import lexer.parsers.literals as literals
-import lexer.parsers.filters as filters
-import lexer.parsers.state as state
-import lexer.parsers.basic as basic
-import lexer.parsers.tools as tools
-from lexer.parsers.indent import Indentation
+import greencss.lexer.parsers.compound as compound
+import greencss.lexer.parsers.literals as literals
+import greencss.lexer.parsers.filters as filters
+import greencss.lexer.parsers.state as state
+import greencss.lexer.parsers.basic as basic
+import greencss.lexer.parsers.tools as tools
+from greencss.lexer.parsers.indent import Indentation
 
 # Infinity
 inf = float('inf')

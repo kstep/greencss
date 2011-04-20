@@ -1,6 +1,6 @@
 
-from lexer.parsers.compound import plus
-from lexer.parsers.literals import charclass
+from greencss.lexer.parsers.compound import plus
+from greencss.lexer.parsers.literals import charclass
 
 class Indentation(object):
 
@@ -49,7 +49,5 @@ class Indentation(object):
             else:
                 self.__class__.stack.pop()
 
-        #import lexer.parsers.basic as basic
-        #print self.indent, self.stack, result, level, basic.lastline
         return result, rest
 

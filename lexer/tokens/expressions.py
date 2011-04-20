@@ -1,7 +1,7 @@
-from lexer.tokens.basic import identifier, pcall, number, unit, color, string, spaces, alpha
-from lexer.tokens import Value, Variable, Color, Macro, Values, Expression, PseudoCall, String
-from lexer.parsers.parsers import _, EOL, inf
-from lexer.parsers.filters import join
+from greencss.lexer.tokens.basic import identifier, pcall, number, unit, color, string, spaces, alpha
+from greencss.lexer.tokens import Value, Variable, Color, Macro, Values, Expression, PseudoCall, String
+from greencss.lexer.parsers.parsers import _, EOL, inf
+from greencss.lexer.parsers.filters import join
 
 varval = (_('$')/0 - identifier) / Variable.get
 
