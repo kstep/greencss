@@ -32,6 +32,9 @@ class Parser(object):
     A ^ B
         A, but not after B, i.e. exclude B from A
 
+    A & D
+        A parser is decorated with D (function)
+
     -A
         A is optional, i.e. match zero to one A
 
@@ -44,8 +47,9 @@ class Parser(object):
     A * (N, M)
         repeat A from N to M times, N < M
 
-    A & P
-        match A only if matched token passes test by predicate P
+    A == P
+    A != P
+        match A only if matched token passes (or not) test by predicate P
 
     A.T
         apply tool T to A (see lexer.parser.tools for details)
@@ -172,17 +176,36 @@ class Parser(object):
         return Parser(parser)
 
     def __and__(self, other):
+        parser = other(self.parser)
+        return Parser(parser)
+
+    def _checker(self, func):
+        if isinstance(func, basestring):
+            checker = lambda token: token[0] == func
+        elif isinstance(func, tuple):
+            checker = lambda token: token == func
+        else:
+            checker = filters.check(func)
+        return checker
+
+    def __eq__(self, func):
         '''
         Match self only if other function permits so
         '''
-        parser = filters.pipe(self.parser, filters.check(other))
+        checker = self._checker(func)
+        parser = filters.pipe(self.parser, checker)
+        return Parser(parser)
+
+    def __ne__(self, func):
+        checker = self._checker(func)
+        parser = filters.pipe(self.parser, lambda token: not checker(token))
         return Parser(parser)
 
     def __rshift__(self, other):
         '''
         Wrap self into other (or compose self with other)
         '''
-        parser = other(self.parser)
+        parser = filters.pipe(self.parser, lambda token: other(*token))
         return Parser(parser)
 
     def push(self):

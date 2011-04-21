@@ -62,8 +62,7 @@ class Unit(object):
 
         koeff1 = cls._conv[table1][val1.unit]
         koeff2 = cls._conv[table2][val2.unit]
-        val = Value()
-        val.value, val.unit = (float(val1) / koeff2 * koeff1, val2.unit)
+        val = Value(float(val1) / koeff2 * koeff1, val2.unit)
         return val, val2
 
     @classmethod
@@ -75,22 +74,19 @@ class Unit(object):
                 raise NotImplementedError()
 
             a, b = cls.convert(self, other)
-            result = Value()
-            result.value = meth(a, b)
-            result.unit = a.unit
-            return result
+            return Value(meth(a, b), a.unit)
         return wrapper
 
 class PseudoCall(Token):
-    __slots__ = ('name', 'args')
-    def init(self, token):
+    _tokens = ('name', 'args')
+    def __init__(self, *token):
         self.name, self.args = token[0], token[1]
 
     def render(self, context={}):
         return '%s(%s)' % (self.name, self.args)
 
 class String(Token):
-    __slots__ = ('value',)
+    _tokens = ('value',)
 
     def render(self, context={}):
         if " " in self.value:
@@ -99,13 +95,10 @@ class String(Token):
             return self.value
 
     def length(self):
-        value = Value()
-        value.value = len(self.value)
-        value.unit = ''
-        return value
+        return Value(len(self.value), '')
 
 class Value(Token):
-    __slots__ = ('value', 'unit')
+    _tokens = ('value', 'unit')
 
     def render(self, context={}):
         return '%s%s' % (self.value, self.unit)
@@ -151,7 +144,7 @@ class Value(Token):
         return float(self.value)
 
 class Selector(Token):
-    def init(self, token):
+    def __init__(self, *token):
         self.values = token
 
     @staticmethod
@@ -164,7 +157,7 @@ class Selector(Token):
         return ', '.join(map(self.inherit, product(base, self.values)))
 
 class Property(Token):
-    __slots__ = ('name', 'value')
+    _tokens = ('name', 'value')
     def render(self, context={}):
         return '%s: %s;' % (self.name, self.value.render(context))
 
@@ -175,7 +168,7 @@ class Variable(Token):
     variables = {}
     instance = None
 
-    def init(self, token):
+    def __init__(self, *token):
         self.__class__.variables[token[0]] = token[1]
 
     def render(self, context={}):
@@ -199,10 +192,8 @@ class Variable(Token):
             raise NameError('Variable \'%s\' is not defined' % (name))
 
     class var(object):
-        def __new__(cls, name=''):
-            self = object.__new__(cls)
+        def __init__(self, name=''):
             self.name = name
-            return self
 
         def apply(self, context={}):
             value = context.get(self.name, None) or Variable.variables.get(self.name, None)
@@ -211,7 +202,7 @@ class Variable(Token):
             return value
 
 class Color(Token):
-    __slots__ = ('red', 'green', 'blue')
+    _tokens = ('red', 'green', 'blue')
     _names = {
         'aliceblue'            : (240, 248, 255), 
         'antiquewhite'         : (250, 235, 215), 
@@ -355,7 +346,7 @@ class Color(Token):
         'yellowgreen'          : (154, 205, 50)
     }
 
-    def init(self, token):
+    def __init__(self, *token):
         if len(token) == 1:
             try:
                 color = self._names[token[0]]
@@ -401,9 +392,7 @@ class Color(Token):
         if l < 0:
             l = 0.0
 
-        color = Color()
-        color.init(('hls', h, l, s))
-        return color
+        return Color('hls', h, l, s)
 
     def brighten(self, args=None):
         if args:
@@ -422,9 +411,7 @@ class Color(Token):
         if l < 0:
             l = 0.0
 
-        color = Color()
-        color.init(('hls', h, l, s))
-        return color
+        return Color('hls', h, l, s)
 
     def render(self, context={}):
         return self.hex()
@@ -442,18 +429,14 @@ class Color(Token):
         g = self.boundcheck(self.green + other.green)
         b = self.boundcheck(self.blue + other.blue)
 
-        color = Color()
-        color.init(('rgb', r, g, b))
-        return color
+        return Color('rgb', r, g, b)
 
     def __sub__(self, other):
         r = self.boundcheck(self.red - other.red)
         g = self.boundcheck(self.green - other.green)
         b = self.boundcheck(self.blue - other.blue)
 
-        color = Color()
-        color.init(('rgb', r, g, b))
-        return color
+        return Color('rgb', r, g, b)
 
     def __mul__(self, other):
         if isinstance(other, Color):
@@ -466,9 +449,7 @@ class Color(Token):
         g = self.boundcheck(self.green * g)
         b = self.boundcheck(self.blue * b)
 
-        color = Color()
-        color.init(('rgb', r, g, b))
-        return color
+        return Color('rgb', r, g, b)
 
     def __div__(self, other):
         if isinstance(other, Color):
@@ -481,14 +462,12 @@ class Color(Token):
         g = self.boundcheck(self.green / g)
         b = self.boundcheck(self.blue / b)
 
-        color = Color()
-        color.init(('rgb', r, g, b))
-        return color
+        return Color('rgb', r, g, b)
 
 class Macro(Token):
     macros = {}
 
-    def init(self, token):
+    def __init__(self, *token):
         self.name = token[0]
         if isinstance(token[1], Arguments):
             self.args, self.body = token[1].args, token[2:]
@@ -520,7 +499,7 @@ class Macro(Token):
         return body
 
 class Rule(Token):
-    def init(self, token):
+    def __init__(self, *token):
         self.selector = token[0]
         self.children = []
         self.properties = []
@@ -560,16 +539,16 @@ def ComplexProperty(token):
     return tail
 
 class Arguments(Token):
-    __slots__ = ('args',)
-    def init(self, token):
+    _tokens = ('args',)
+    def __init__(self, *token):
         self.args = list(token)
 
     def render(self, context={}):
         return ', '.join(self.args)
 
 class Values(Token):
-    __slots__ = ('values',)
-    def init(self, token):
+    _tokens = ('values',)
+    def __init__(self, *token):
         self.values = list(token)
     
     def render(self, context={}):
@@ -579,7 +558,7 @@ class Values(Token):
         self.values = apply_context(self.values, context)
 
 class Expression(Token):
-    __slots__ = ('expression',)
+    _tokens = ('expression',)
     
     class Op(object):
         ASSO_LEFT = (-1, 0)
@@ -619,7 +598,7 @@ class Expression(Token):
             '-': Op('-', 1, func=lambda s: s.pop() - s.pop()),
             }
 
-    def init(self, token):
+    def __init__(self, *token):
         self._value = None
         self.expression = []
         stack = []
@@ -701,7 +680,7 @@ def IncludeFile(token):
     return token or []
 
 class Metablock(Token):
-    def init(self, token):
+    def __init__(self, *token):
         self.name = token[0]
         if isinstance(token[1], Values):
             self.args, self.body = token[1].values, token[2:]
