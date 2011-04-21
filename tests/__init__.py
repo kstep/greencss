@@ -235,3 +235,25 @@ body {
   color: #ff0000;
 }
 '''.lstrip())
+
+def test_09():
+    '''
+    Color operations
+    '''
+    test = '''
+body:
+    color: #00ee00.darken 100
+    color: #00ee00.brighten 100
+    color: #0000ee + #00ee00
+    color: #0000ee - #0000ee
+    color: #ee00ee / 10
+    '''
+    eq_(convert(test), '''
+body {
+  color: #00eb00;
+  color: #00f000;
+  color: #00eeee;
+  color: #000000;
+  color: #170017;
+}
+'''.lstrip())

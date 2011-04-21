@@ -69,6 +69,11 @@ class Unit(object):
     @classmethod
     def coerce(cls, meth):
         def wrapper(self, other):
+            if not isinstance(other, Value):
+                if hasattr(other, meth.__name__):
+                    return getattr(other, meth.__name__)(self)
+                raise NotImplementedError()
+
             a, b = cls.convert(self, other)
             result = Value()
             result.value = meth(a, b)
@@ -351,7 +356,6 @@ class Color(Token):
     }
 
     def init(self, token):
-        print token
         if len(token) == 1:
             try:
                 color = self._names[token[0]]
@@ -380,8 +384,106 @@ class Color(Token):
     def rgb(self):
         return 'rgb(%d, %d, %d)' % (self.red, self.green, self.blue)
 
+    def darken(self, args=None):
+        if args:
+            amount = args.values[0].value
+            amount, unit = int(amount.value), amount.unit
+        else:
+            amount, unit = 10, '%'
+
+        h, l, s = colorsys.rgb_to_hls(self.red, self.green, self.blue)
+
+        if unit == '%':
+            l *= amount / 100.0
+        else:
+            l -= amount / 100.0
+
+        if l < 0:
+            l = 0.0
+
+        color = Color()
+        color.init(('hls', h, l, s))
+        return color
+
+    def brighten(self, args=None):
+        if args:
+            amount = args.values[0].value
+            amount, unit = int(amount.value), amount.unit
+        else:
+            amount, unit = 10.0, '%'
+
+        h, l, s = colorsys.rgb_to_hls(self.red, self.green, self.blue)
+
+        if unit == '%':
+            l *= 1.0 + amount / 100.0
+        else:
+            l += amount / 100.0
+
+        if l < 0:
+            l = 0.0
+
+        color = Color()
+        color.init(('hls', h, l, s))
+        return color
+
     def render(self, context={}):
         return self.hex()
+
+    def boundcheck(self, value):
+        if value < 0:
+            return 0
+        elif value > 255:
+            return 255
+        else:
+            return value
+
+    def __add__(self, other):
+        r = self.boundcheck(self.red + other.red)
+        g = self.boundcheck(self.green + other.green)
+        b = self.boundcheck(self.blue + other.blue)
+
+        color = Color()
+        color.init(('rgb', r, g, b))
+        return color
+
+    def __sub__(self, other):
+        r = self.boundcheck(self.red - other.red)
+        g = self.boundcheck(self.green - other.green)
+        b = self.boundcheck(self.blue - other.blue)
+
+        color = Color()
+        color.init(('rgb', r, g, b))
+        return color
+
+    def __mul__(self, other):
+        if isinstance(other, Color):
+            r, g, b = other.red, other.green, other.blue
+        else:
+            v = int(other.value)
+            r, g, b = v, v, v
+
+        r = self.boundcheck(self.red * r)
+        g = self.boundcheck(self.green * g)
+        b = self.boundcheck(self.blue * b)
+
+        color = Color()
+        color.init(('rgb', r, g, b))
+        return color
+
+    def __div__(self, other):
+        if isinstance(other, Color):
+            r, g, b = other.red, other.green, other.blue
+        else:
+            v = int(other.value)
+            r, g, b = v, v, v
+
+        r = self.boundcheck(self.red / r)
+        g = self.boundcheck(self.green / g)
+        b = self.boundcheck(self.blue / b)
+
+        color = Color()
+        color.init(('rgb', r, g, b))
+        return color
 
 class Macro(Token):
     macros = {}
