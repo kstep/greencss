@@ -1,7 +1,7 @@
 from greencss.lexer.parsers.helpers import wrap_parser
 
 def pipe(parser, func):
-    @wrap_parser('filter', func)
+    @wrap_parser('pipe', func)
     def wrapper(inp):
         token, rest = parser(inp)
         if token is not None:

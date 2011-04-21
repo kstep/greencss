@@ -21,7 +21,7 @@ value = ((
 expression_tail = spaces/0 - ['*/+-'] - spaces/0 - _('(').opt - spaces/0 - value - _(')').opt
 expression = (
         (_('(').opt - value - expression_tail * inf - _(')').opt)
-            #& (lambda t: t.count('(') == t.count(')'))
+            #== (lambda t: t.count('(') == t.count(')'))
         ) >> Expression
 
 values = (

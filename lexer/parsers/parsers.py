@@ -205,7 +205,13 @@ class Parser(object):
         '''
         Wrap self into other (or compose self with other)
         '''
-        parser = filters.pipe(self.parser, lambda token: other(*token))
+        from greencss.lexer.parsers.tokens import TokenError
+        def filter(token):
+            try:
+                return other(*token)
+            except TokenError:
+                return None
+        parser = filters.pipe(self.parser, filter)
         return Parser(parser)
 
     def push(self):

@@ -15,13 +15,13 @@ number = (integer - ('.' - uinteger).opt) / join
 color_unit = (
         (digit * (1, 3) / join - _('%').opt)
             / (lambda c: int(c[0])*255//100 if len(c) > 1 else int(c[0]))
-            & (lambda c: 0 <= c[0] <= 255)
+            == (lambda c: 0 <= c[0] <= 255)
         )
 color_args = color_unit - (W(',')/0 - color_unit) * 2
 color_hunit = (
         hexdigit * 2 / join
             / (lambda c: int(c[0], 16))
-            & (lambda c: 0 <= c[0] <= 255)
+            == (lambda c: 0 <= c[0] <= 255)
         )
 color = (
         (_('#')/'rgb' - color_hunit * 3) |
