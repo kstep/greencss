@@ -166,11 +166,11 @@ def test_05():
 variable = "defg"
 
 @define macro(var):
-    bottom: $var.length() * 2px
+    bottom: $var.length * 2px
 
 body:
-    margin: "abc".length() * 1px
-    top: $variable.length() * 1px
+    margin: "abc".length * 1px
+    top: $variable.length * 1px
     %macro("xx")
     '''
     eq_(convert(test), '''

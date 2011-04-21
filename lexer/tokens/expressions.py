@@ -7,7 +7,7 @@ from greencss.lexer.parsers.filters import join
 varval = (_('$')/0 - identifier) / Variable.get
 
 _vallist = _(lambda inp: vallist(inp))
-mcall = _('.')/0 - identifier - _('(')/0 - _vallist.opt - _(')')/0
+mcall = _('.')/0 - identifier - (spaces/0 - _vallist).opt
 word = alpha * (1, inf) / join
 value = ((
         number - unit.opt >> Value      | 
@@ -19,7 +19,10 @@ value = ((
         ) - mcall.opt) / MethodCall
 
 expression_tail = spaces/0 - ['*/+-'] - spaces/0 - _('(').opt - spaces/0 - value - _(')').opt
-expression = (_('(').opt - value - expression_tail * inf - _(')').opt) >> Expression
+expression = (
+        (_('(').opt - value - expression_tail * inf - _(')').opt)
+            #& (lambda t: t.count('(') == t.count(')'))
+        ) >> Expression
 
 values = (
         (expression - ((_(',').opt - spaces)/0 - expression) * inf)
