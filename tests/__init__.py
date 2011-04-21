@@ -216,3 +216,22 @@ body {
 }
 '''.lstrip())
 
+def test_08():
+    '''
+    Color literals
+    '''
+    test = '''
+body:
+    color: red
+    color: #ff0000
+    color: rgb(255, 0, 0)
+    color: rgb(100%, 0%, 0%)
+    '''
+    eq_(convert(test), '''
+body {
+  color: #ff0000;
+  color: #ff0000;
+  color: #ff0000;
+  color: #ff0000;
+}
+'''.lstrip())
