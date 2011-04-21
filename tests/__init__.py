@@ -166,11 +166,11 @@ def test_05():
 variable = "defg"
 
 @define macro(var):
-    bottom: $var.length * 2px
+    bottom: $var.length() * 2px
 
 body:
-    margin: "abc".length * 1px
-    top: $variable.length * 1px
+    margin: "abc".length() * 1px
+    top: $variable.length() * 1px
     %macro("xx")
     '''
     eq_(convert(test), '''
@@ -242,8 +242,8 @@ def test_09():
     '''
     test = '''
 body:
-    color: #00ee00.darken 100
-    color: #00ee00.brighten 100
+    color: #00ee00.darken(100)
+    color: #00ee00.brighten(100)
     color: #0000ee + #00ee00
     color: #0000ee - #0000ee
     color: #ee00ee / 10

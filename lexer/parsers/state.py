@@ -6,7 +6,7 @@ class state(object):
     parser = None
 
     @classmethod
-    def push(cls, parser):
+    def push(cls, parser, checker=(lambda s, t: s == t)):
 
         def save_state(inp):
             token, rest = parser(inp)
@@ -14,6 +14,7 @@ class state(object):
                 st = cls()
                 st.parser = parser
                 st.token = token
+                st.checker = checker
                 cls.stack.append(st)
             return token, rest
 
@@ -30,7 +31,7 @@ class state(object):
     @classmethod
     def _check(cls, inp, st):
         token, rest = st.parser(inp)
-        if token != st.token:
+        if not st.checker(st.token, token):
             return None, inp
         return token, rest
 

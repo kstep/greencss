@@ -23,6 +23,9 @@ class Parser(object):
     A | B | C
         either A, B or C, whatever matches first
 
+    L < A > R
+        A is surrounded by balanced pair of optional L and R
+
     A / F
         A replaced by F (filter function, zero or string)
 
@@ -60,12 +63,14 @@ class Parser(object):
     A[N:M]
         get tokens from Nth up to Mth
 
-    A.push(), A.st(), A.pop(), A.drop()
+    A.push([checker]), A.st(), A.pop(), A.drop()
         operations on state stack:
             * A.push() - match and push token into stack,
             * A.st() - match and check against top stacked token for equality, stack is unchanged,
             * A.pop() - pop top stacked token, match and check against popped token,
             * A.drop() - match unconditionally, then just drop top stacked token.
+        A.push() accepts optional checker function to test popped value against just matched one,
+        defaults to equality function.
 
     A(input)
         Run parser for given input (must be a string), returns a pair of matched tokens and the rest
@@ -75,6 +80,8 @@ class Parser(object):
         string, then the rest part will be empty string.
     '''
 
+    args_stack = []
+    state_stack = []
     def __init__(self, parser=basic.anychar):
         self.parser = parser
 
@@ -214,11 +221,46 @@ class Parser(object):
         parser = filters.pipe(self.parser, filter)
         return Parser(parser)
 
-    def push(self):
+    def __lt__(self, other):
+        other.args_stack.append(self)
+        return other
+
+    def __gt__(self, other):
+        '''
+        Self is enclosed into balanced pair of parsers:
+            left <( parser )> right
+        Both side parsers are considered optional automatically,
+        as this parser doesn't have sense for non-optional border
+        parsers, use (left - parser - right) syntax for arbitrary
+        borders.
+        '''
+        left, right = self.args_stack.pop(), other
+
+        def left_parser(inp):
+            token, rest = left(inp)
+            if token is None:
+                return [], inp
+            self.state_stack.append(token)
+            return token, rest
+
+        def right_parser(inp):
+            token, rest = right(inp)
+            if token is None:
+                return [], inp
+            try:
+                self.state_stack.pop()
+            except IndexError:
+                return [], inp
+            return token, rest
+
+        parser = compound.seq(left_parser, self.parser, right_parser)
+        return Parser(parser)
+
+    def push(self, checker=(lambda s, t: s == t)):
         '''
         Push matched state
         '''
-        return Parser(state.state.push(self.parser))
+        return Parser(state.state.push(self.parser, checker))
 
     def st(self):
         '''
