@@ -1,9 +1,12 @@
 from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments, IncludeFile, Metablock
 from greencss.lexer.tokens.basic import identifier, spaces, digit, flag
-from greencss.lexer.parsers.parsers import _, EOL, W, inf
+from greencss.lexer.parsers.parsers import _, EOL, W, inf, A
 from greencss.lexer.tokens.expressions import value, values, cmacrocall, vallist
 from greencss.lexer.tokens.basic import string
 from greencss.lexer.parsers.filters import join
+
+shebang = ('#!' - (A^EOL)*inf - EOL)/0
+comment = (_('/*')< A*inf >_('*/'))/0
 
 vardef = identifier - W('=')/0 - value - EOL >> Variable
 
