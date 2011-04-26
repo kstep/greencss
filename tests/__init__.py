@@ -257,3 +257,24 @@ body {
   color: #170017;
 }
 '''.lstrip())
+
+def test_10():
+    '''
+    Important flag
+    '''
+    test = '''
+body:
+    background: url(/image.png) repeat !important
+    margin->
+        left: 10px !important
+        right: 10px !important
+        top: 5px
+    '''
+    eq_(convert(test), '''
+body {
+  background: url(/image.png) repeat !important;
+  margin-left: 10px !important;
+  margin-right: 10px !important;
+  margin-top: 5px;
+}
+'''.lstrip())

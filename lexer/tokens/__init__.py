@@ -157,9 +157,9 @@ class Selector(Token):
         return ', '.join(map(self.inherit, product(base, self.values)))
 
 class Property(Token):
-    _tokens = ('name', 'value')
+    _tokens = ('name', 'value', 'flag')
     def render(self, context={}):
-        return '%s: %s;' % (self.name, self.value.render(context))
+        return '%s: %s%s;' % (self.name, self.value.render(context), ' '+self.flag if self.flag else '')
 
     def apply(self, context={}):
         self.value = self.value.apply(context) or self.value
