@@ -24,6 +24,7 @@ sub:
     margin-right: $variable
     margin-bottom: -10px
     margin-top: $variable1
+    %macro()
 
 alt:
     color: green
@@ -36,6 +37,7 @@ sub {
   margin-right: 12px;
   margin-bottom: -10px;
   margin-top: 15px;
+  margin-left: 5px;
 }
 sub i {
   margin-top: 4.0px;

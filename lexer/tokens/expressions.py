@@ -30,6 +30,6 @@ values = (
 vallist = expression.commalist >> Values
 
 cmacrocall = (
-        _('%')/0 - identifier - (-(value.commalist).surround) - EOL
+        _('%')/0 - identifier - _('(')/0 - value.commalist.opt - _(')')/0 - EOL
         ) / Macro.call
 
