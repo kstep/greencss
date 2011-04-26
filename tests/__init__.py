@@ -269,6 +269,13 @@ body:
         left: 10px !important
         right: 10px !important
         top: 5px
+.class !important:
+    color: red
+    background: white
+    .subclass:
+        color: blue
+        .subsubclass !important:
+            color: white
     '''
     eq_(convert(test), '''
 body {
@@ -276,5 +283,15 @@ body {
   margin-left: 10px !important;
   margin-right: 10px !important;
   margin-top: 5px;
+}
+.class {
+  color: #ff0000 !important;
+  background: #ffffff !important;
+}
+.class .subclass {
+  color: #0000ff;
+}
+.class .subclass .subsubclass {
+  color: #ffffff !important;
 }
 '''.lstrip())

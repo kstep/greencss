@@ -145,7 +145,11 @@ class Value(Token):
 
 class Selector(Token):
     def __init__(self, *token):
-        self.values = token
+        self.values = list(token)
+        if self.values[-1].startswith('!'):
+            self.flag = self.values.pop()
+        else:
+            self.flag = None
 
     @staticmethod
     def inherit(pair):
@@ -159,7 +163,8 @@ class Selector(Token):
 class Property(Token):
     _tokens = ('name', 'value', 'flag')
     def render(self, context={}):
-        return '%s: %s%s;' % (self.name, self.value.render(context), ' '+self.flag if self.flag else '')
+        flag = self.flag or context.get('flag', None)
+        return '%s: %s%s;' % (self.name, self.value.render(context), ' '+flag if flag else '')
 
     def apply(self, context={}):
         self.value = self.value.apply(context) or self.value
@@ -517,6 +522,7 @@ class Rule(Token):
         result = ''
 
         if self.properties:
+            context['flag'] = self.selector.flag
             result += '%s {\n  %s\n}\n' % (
                 self.selector.render(context),
                 '\n  '.join(p.render(context) for p in self.properties))

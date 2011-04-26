@@ -33,7 +33,7 @@ catom = (
 cexpression_tail = spaces/' ' - (['+>'] - spaces/' ').opt - catom
 cexpression = (catom - cexpression_tail*inf - spaces/0) / join
 
-cselector = cexpression.commalist - _(':')/0 - EOL >> Selector
+cselector = cexpression.commalist - spaces/0 - flag.opt - _(':')/0 - EOL >> Selector
 cproperty = (
         identifier - (':' - spaces)/0 - values - spaces/0 - flag.opt - EOL >> Property |
         (identifier - _('>')/0 - EOL -
