@@ -1,5 +1,8 @@
 from greencss import convert
-from nose.tools import eq_
+#from nose.tools import eq_
+def eq_(value, expected):
+    if value != expected:
+        raise AssertionError("Expected: %s\nGot:\n%s" % (expected, value))
 
 def test_01():
     '''
@@ -271,13 +274,16 @@ body:
         left: 10px !important
         right: 10px !important
         top: 5px
-.class !important:
+.class: !important
     color: red
     background: white
     .subclass:
         color: blue
-        .subsubclass !important:
+        background: blue !not-important
+        .subsubclass:
             color: white
+        .subsubclass: !not-important
+            background: green
     '''
     eq_(convert(test), '''
 body {
@@ -291,9 +297,14 @@ body {
   background: #ffffff !important;
 }
 .class .subclass {
-  color: #0000ff;
+  color: #0000ff !important;
+  background: #0000ff;
 }
 .class .subclass .subsubclass {
   color: #ffffff !important;
+}
+
+.class .subclass .subsubclass {
+  background: #008000;
 }
 '''.lstrip())

@@ -7,7 +7,8 @@ from greencss.lexer.parsers.literals import lit
 spaces = space * inf
 delims = delim * inf
 identifier = (alpha - alnum * inf) / join
-flag = ('!' - alnum * (1, inf)) / join
+flag = ('!' - _('not-').opt - alnum * (1, inf)) / join
+flags = flag - (spaces/0 - flag) * inf
 
 uinteger = digit * (1, inf) / join
 integer = (_('-').opt - uinteger) / join

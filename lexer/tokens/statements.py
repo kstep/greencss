@@ -1,5 +1,5 @@
-from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments, IncludeFile, Metablock
-from greencss.lexer.tokens.basic import identifier, spaces, digit, flag
+from greencss.lexer.tokens import Selector, Property, ComplexProperty, Variable, Macro, Rule, Arguments, IncludeFile, Metablock, Flags
+from greencss.lexer.tokens.basic import identifier, spaces, digit, flags
 from greencss.lexer.parsers.parsers import _, EOL, W, inf, A
 from greencss.lexer.tokens.expressions import value, values, cmacrocall, vallist
 from greencss.lexer.tokens.basic import string
@@ -36,9 +36,9 @@ catom = (
 cexpression_tail = spaces/' ' - (['+>'] - spaces/' ').opt - catom
 cexpression = (catom - cexpression_tail*inf - spaces/0) / join
 
-cselector = cexpression.commalist - spaces/0 - flag.opt - _(':')/0 - EOL >> Selector
+cselector = cexpression.commalist - spaces/0 - _(':')/0 - spaces/0 - (flags.opt >> Flags) - spaces/0 - EOL >> Selector
 cproperty = (
-        identifier - (':' - spaces)/0 - values - spaces/0 - flag.opt - EOL >> Property |
+        identifier - (':' - spaces)/0 - values - spaces/0 - (flags.opt >> Flags) - EOL >> Property |
         (identifier - _('>')/0 - EOL -
             _cproperty.indent) / ComplexProperty |
         cmacrocall

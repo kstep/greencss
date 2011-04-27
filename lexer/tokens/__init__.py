@@ -77,6 +77,35 @@ class Unit(object):
             return Value(meth(a, b), a.unit)
         return wrapper
 
+class Flags(Token):
+    def __init__(self, *tokens):
+        self.flags = map(lambda t: t.lstrip('!'), tokens)
+
+    def __contains__(self, item):
+        if item.startswith('not-'):
+            return item[4:] not in self.flags
+        else:
+            return item in self.flags
+
+    def render(self, context={}):
+        flags = []
+        for f in self.flags:
+            if f.startswith('not-'):
+                while flags:
+                    try:
+                        flags.remove(f[4:])
+                    except ValueError:
+                        break
+            elif f not in flags:
+                flags.append(f)
+        if flags:
+            return ' ' + ' '.join(map(lambda f: '!'+f, flags))
+        else:
+            return ''
+
+    def __iter__(self):
+        return iter(self.flags)
+
 class PseudoCall(Token):
     _tokens = ('name', 'args')
     def __init__(self, *token):
@@ -146,10 +175,10 @@ class Value(Token):
 class Selector(Token):
     def __init__(self, *token):
         self.values = list(token)
-        if self.values[-1].startswith('!'):
-            self.flag = self.values.pop()
+        if isinstance(self.values[-1], Flags):
+            self.flags = self.values.pop()
         else:
-            self.flag = None
+            self.flags = None
 
     @staticmethod
     def inherit(pair):
@@ -161,10 +190,10 @@ class Selector(Token):
         return ', '.join(map(self.inherit, product(base, self.values)))
 
 class Property(Token):
-    _tokens = ('name', 'value', 'flag')
+    _tokens = ('name', 'value', 'flags')
     def render(self, context={}):
-        flag = self.flag or context.get('flag', None)
-        return '%s: %s%s;' % (self.name, self.value.render(context), ' '+flag if flag else '')
+        flags = Flags(*(list(context.get('flags', [])) + list(self.flags)))
+        return '%s: %s%s;' % (self.name, self.value.render(context), flags.render(context))
 
     def apply(self, context={}):
         self.value = self.value.apply(context) or self.value
@@ -521,8 +550,8 @@ class Rule(Token):
     def render(self, context={}):
         result = ''
 
+        context['flags'] = Flags(*(list(context.get('flags', [])) + list(self.selector.flags or [])))
         if self.properties:
-            context['flag'] = self.selector.flag
             result += '%s {\n  %s\n}\n' % (
                 self.selector.render(context),
                 '\n  '.join(p.render(context) for p in self.properties))
