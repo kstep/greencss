@@ -87,17 +87,32 @@ class Flags(Token):
         else:
             return item in self.flags
 
-    def render(self, context={}):
-        flags = []
+    def __add__(self, other):
+        other = list(other)
+        result = list(self.flags)
+        for item in other:
+            if item not in result:
+                result.append(item)
+        flags = Flags()
+        flags.flags = result
+        return flags
+    __radd__ = __add__
+
+    @property
+    def compressed(self):
+        result = []
         for f in self.flags:
             if f.startswith('not-'):
-                while flags:
-                    try:
-                        flags.remove(f[4:])
-                    except ValueError:
-                        break
-            elif f not in flags:
-                flags.append(f)
+                try:
+                    result.remove(f[4:])
+                except ValueError:
+                    pass
+            elif f not in result:
+                result.append(f)
+        return result
+
+    def render(self, context={}):
+        flags = self.compressed
         if flags:
             return ' ' + ' '.join(map(lambda f: '!'+f, flags))
         else:
@@ -192,7 +207,7 @@ class Selector(Token):
 class Property(Token):
     _tokens = ('name', 'value', 'flags')
     def render(self, context={}):
-        flags = Flags(*(list(context.get('flags', [])) + list(self.flags)))
+        flags = context.get('flags', []) + (self.flags or [])
         return '%s: %s%s;' % (self.name, self.value.render(context), flags.render(context))
 
     def apply(self, context={}):
@@ -550,7 +565,7 @@ class Rule(Token):
     def render(self, context={}):
         result = ''
 
-        context['flags'] = Flags(*(list(context.get('flags', [])) + list(self.selector.flags or [])))
+        context['flags'] = context.get('flags', []) + (self.selector.flags or [])
         if self.properties:
             result += '%s {\n  %s\n}\n' % (
                 self.selector.render(context),
