@@ -42,9 +42,9 @@ class Unit(object):
 
         if not (val1.unit and val2.unit):
             if val1.unit:
-                val2.unit = val1.unit
+                val2 = Value(val2.value, val1.unit)
             else:
-                val1.unit = val2.unit
+                val1 = Value(val1.value, val2.unit)
             return val1, val2
 
         try:
